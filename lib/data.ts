@@ -17,6 +17,7 @@ export const profileTags = [
 
 export const feedItems = [
   {
+    id: "static-worker-classification-guidance",
     title: "Federal agency updates worker classification guidance",
     summary:
       "New guidance clarifies when contract and gig work may be treated as employment for wage protections.",
@@ -36,6 +37,7 @@ export const feedItems = [
     impactScore: 78,
   },
   {
+    id: "static-rent-notice-bill",
     title: "State rent notice bill advances from committee",
     summary:
       "A proposed state bill would require longer notice before certain rent increases and lease nonrenewals.",
@@ -55,6 +57,7 @@ export const feedItems = [
     impactScore: 64,
   },
   {
+    id: "static-phone-search-exception",
     title: "Appeals court narrows phone search exception",
     summary:
       "A recent appellate decision limits when officers can search digital content without a warrant after an arrest.",

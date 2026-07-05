@@ -5,6 +5,7 @@ from typing import Any
 
 FEED_ITEMS: list[dict[str, Any]] = [
     {
+        "id": "static-worker-classification-guidance",
         "title": "Federal agency updates worker classification guidance",
         "summary": "Guidance clarifies when contract and gig work may be treated as employment for wage protections.",
         "jurisdiction": "Federal",
@@ -21,6 +22,7 @@ FEED_ITEMS: list[dict[str, Any]] = [
         "impact_score": 78,
     },
     {
+        "id": "static-rent-notice-bill",
         "title": "State rent notice bill advances from committee",
         "summary": "A proposed bill would require longer notice before certain rent increases and lease nonrenewals.",
         "jurisdiction": "California",
@@ -37,6 +39,7 @@ FEED_ITEMS: list[dict[str, Any]] = [
         "impact_score": 64,
     },
     {
+        "id": "static-phone-search-exception",
         "title": "Appeals court narrows phone search exception",
         "summary": "A recent appellate decision limits when officers can search digital content without a warrant after an arrest.",
         "jurisdiction": "9th Circuit",

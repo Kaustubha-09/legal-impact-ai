@@ -27,6 +27,7 @@ export function askLegalQuestion(
 }
 
 type FeedItemApi = {
+  id: string;
   title: string;
   summary: string;
   jurisdiction: string;
@@ -44,6 +45,7 @@ type FeedItemApi = {
 };
 
 export type FeedItem = {
+  id: string;
   title: string;
   summary: string;
   jurisdiction: string;
@@ -62,6 +64,7 @@ export type FeedItem = {
 
 function mapFeedItem(item: FeedItemApi): FeedItem {
   return {
+    id: item.id,
     title: item.title,
     summary: item.summary,
     jurisdiction: item.jurisdiction,

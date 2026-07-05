@@ -41,6 +41,7 @@ def _to_feed_item(bill: dict[str, Any]) -> dict[str, Any] | None:
     number = bill.get("number")
     citation = f"{bill.get('type', '')} {number} ({congress}th Congress)".strip()
     return {
+        "id": f"congress-{congress}-{bill_type}-{number}",
         "title": title,
         "summary": latest_action.get("text") or "No recent action text available.",
         "jurisdiction": "Federal",

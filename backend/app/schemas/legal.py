@@ -9,6 +9,7 @@ class UserProfileIn(BaseModel):
 
 
 class FeedItemOut(BaseModel):
+    id: str
     title: str
     summary: str
     jurisdiction: str

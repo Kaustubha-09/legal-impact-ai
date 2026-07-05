@@ -115,12 +115,14 @@ export default function Home() {
   const [isLocating, setIsLocating] = useState(false);
   const [liveFeedItems, setLiveFeedItems] = useState<FeedItem[]>(feedItems);
   const [liveRightsTopics, setLiveRightsTopics] = useState<RightsTopic[]>(rightsTopics);
+  const [seenFeedIds, setSeenFeedIds] = useState<string[]>([]);
 
   useEffect(() => {
     setProfile({ ...defaultProfile, ...loadStored<Partial<Profile>>("legal-impact-profile", {}) });
     setSavedItems(loadStored<string[]>("legal-impact-saved-items", []));
     setSavedTopics(loadStored<string[]>("legal-impact-saved-topics", []));
     setWatchlists(loadStored<string[]>("legal-impact-watchlists", watchlists));
+    setSeenFeedIds(loadStored<string[]>("legal-impact-seen-feed-ids", []));
     setProfileLoaded(true);
   }, []);
 
@@ -143,6 +145,9 @@ export default function Home() {
   useEffect(() => window.localStorage.setItem("legal-impact-saved-items", JSON.stringify(savedItems)), [savedItems]);
   useEffect(() => window.localStorage.setItem("legal-impact-saved-topics", JSON.stringify(savedTopics)), [savedTopics]);
   useEffect(() => window.localStorage.setItem("legal-impact-watchlists", JSON.stringify(watchlists)), [watchlists]);
+  useEffect(() => {
+    if (profileLoaded) window.localStorage.setItem("legal-impact-seen-feed-ids", JSON.stringify(seenFeedIds));
+  }, [seenFeedIds, profileLoaded]);
 
   const filteredFeed = useMemo(() => {
     const term = feedQuery.trim().toLowerCase();
@@ -154,6 +159,14 @@ export default function Home() {
     });
     return [...matches].sort((a, b) => feedSort === "Impact score" ? b.impactScore - a.impactScore : a.title.localeCompare(b.title));
   }, [feedPriority, feedQuery, feedSort, liveFeedItems, profile.tags]);
+  const newFeedItems = useMemo(
+    () => (profileLoaded ? filteredFeed.filter((item) => !seenFeedIds.includes(item.id)) : []),
+    [filteredFeed, seenFeedIds, profileLoaded],
+  );
+
+  function markFeedSeen() {
+    setSeenFeedIds((current) => Array.from(new Set([...current, ...filteredFeed.map((item) => item.id)])));
+  }
   const filteredTopics = useMemo(() => {
     const term = rightsQuery.trim().toLowerCase();
     if (!term) return liveRightsTopics;
@@ -322,15 +335,16 @@ export default function Home() {
       <section className="border-b bg-muted/45">
         <div className="mx-auto flex max-w-7xl items-start gap-3 px-4 py-3 text-sm sm:px-6 lg:px-8">
           <AlertCircle className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-          <p><span className="font-semibold">Local reference mode.</span> This build uses a curated on-device legal reference library. Live legal monitoring and alerts are disabled until verified source connections are configured.</p>
+          <p><span className="font-semibold">Live federal bill tracking enabled.</span> The feed blends a curated reference library with recent bills pulled live from Congress.gov.</p>
         </div>
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[1.3fr_0.7fr] lg:px-8">
         <div className="space-y-6" id="feed">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="text-2xl font-bold">Personalized legal feed</h2><p className="text-sm text-muted-foreground">Reference records ranked by your selected profile tags.</p></div><Button variant="secondary" onClick={() => setShowSaved((current) => !current)}><Bookmark className="size-4" aria-hidden="true" />{showSaved ? "Show feed" : `Saved items (${savedItems.length + savedTopics.length})`}</Button></div>
+          {!showSaved && newFeedItems.length > 0 && <div className="flex flex-col gap-2 rounded-md border border-primary/30 bg-secondary/50 p-3 text-sm sm:flex-row sm:items-center sm:justify-between"><p className="flex items-center gap-2 font-medium text-secondary-foreground"><Bell className="size-4" aria-hidden="true" />{newFeedItems.length} new update{newFeedItems.length === 1 ? "" : "s"} match your profile since your last visit.</p><Button variant="secondary" onClick={markFeedSeen}>Mark all as read</Button></div>}
           {!showSaved && <div className="grid gap-3 rounded-md border bg-card p-3 sm:grid-cols-3"><Input value={feedQuery} placeholder="Filter feed" onChange={(event) => setFeedQuery(event.target.value)} aria-label="Filter legal feed" /><Select value={feedPriority} onChange={(event) => setFeedPriority(event.target.value)} aria-label="Filter feed priority"><option>All priorities</option><option>Priority 1</option><option>Priority 2</option><option>Priority 3</option><option>Priority 4</option></Select><Select value={feedSort} onChange={(event) => setFeedSort(event.target.value)} aria-label="Sort legal feed"><option>Impact score</option><option>Title</option></Select></div>}
-          {showSaved ? <SavedList items={[...savedItems, ...savedTopics]} /> : filteredFeed.length ? <div className="space-y-4">{filteredFeed.map((item) => <Card key={item.title} className="p-5"><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div className="space-y-3"><div className="flex flex-wrap gap-2"><Badge>{item.sourceType}</Badge><Badge className="bg-accent text-accent-foreground">{item.jurisdiction}</Badge><Badge className="bg-card">{item.publicationDate}</Badge><Badge className="bg-secondary">{item.priority}</Badge><Badge className="bg-card">Confidence: {item.confidence}</Badge><Badge className="bg-card">Impact {item.impactScore}/100</Badge></div><h3 className="text-xl font-semibold">{item.title}</h3><p className="text-sm leading-6 text-muted-foreground">{item.summary}</p></div><BookmarkButton saved={savedItems.includes(item.title)} label={item.title} onClick={() => toggleSaved(item.title, "item")} /></div><div className="mt-5 grid gap-4 md:grid-cols-2"><ImpactBlock title="Who is affected" values={item.affected} /><ImpactBlock title="Rights affected" values={item.rights} /></div><div className="mt-5 grid gap-4 lg:grid-cols-2"><InfoBlock title="Why this matters" text={item.whyItMatters} /><InfoBlock title="Personal impact" text={item.personalImpact} highlighted /></div><p className="mt-4 text-xs text-muted-foreground">Sources: {item.citations.join(", ")}</p></Card>)}</div> : <EmptyState title="No reference records match" text="Broaden the feed filters or update your profile tags." />}
+          {showSaved ? <SavedList items={[...savedItems, ...savedTopics]} /> : filteredFeed.length ? <div className="space-y-4">{filteredFeed.map((item) => <Card key={item.id} className="p-5"><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div className="space-y-3"><div className="flex flex-wrap gap-2">{newFeedItems.some((newItem) => newItem.id === item.id) && <Badge className="border-primary bg-primary text-primary-foreground">New</Badge>}<Badge>{item.sourceType}</Badge><Badge className="bg-accent text-accent-foreground">{item.jurisdiction}</Badge><Badge className="bg-card">{item.publicationDate}</Badge><Badge className="bg-secondary">{item.priority}</Badge><Badge className="bg-card">Confidence: {item.confidence}</Badge><Badge className="bg-card">Impact {item.impactScore}/100</Badge></div><h3 className="text-xl font-semibold">{item.title}</h3><p className="text-sm leading-6 text-muted-foreground">{item.summary}</p></div><BookmarkButton saved={savedItems.includes(item.title)} label={item.title} onClick={() => toggleSaved(item.title, "item")} /></div><div className="mt-5 grid gap-4 md:grid-cols-2"><ImpactBlock title="Who is affected" values={item.affected} /><ImpactBlock title="Rights affected" values={item.rights} /></div><div className="mt-5 grid gap-4 lg:grid-cols-2"><InfoBlock title="Why this matters" text={item.whyItMatters} /><InfoBlock title="Personal impact" text={item.personalImpact} highlighted /></div><p className="mt-4 text-xs text-muted-foreground">Sources: {item.citations.join(", ")}</p></Card>)}</div> : <EmptyState title="No reference records match" text="Broaden the feed filters or update your profile tags." />}
         </div>
 
         <aside className="space-y-6">
