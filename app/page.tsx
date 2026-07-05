@@ -35,7 +35,7 @@ import {
   rightsTopics,
   searchResults,
 } from "@/lib/data";
-import { askLegalQuestion } from "@/lib/api";
+import { askLegalQuestion, fetchFeed, fetchRightsTopics, type FeedItem, type RightsTopic } from "@/lib/api";
 
 const nav = [
   { label: "Feed", icon: Bell },
@@ -113,6 +113,8 @@ export default function Home() {
   const [showWeeklySummary, setShowWeeklySummary] = useState(false);
   const [notice, setNotice] = useState("");
   const [isLocating, setIsLocating] = useState(false);
+  const [liveFeedItems, setLiveFeedItems] = useState<FeedItem[]>(feedItems);
+  const [liveRightsTopics, setLiveRightsTopics] = useState<RightsTopic[]>(rightsTopics);
 
   useEffect(() => {
     setProfile({ ...defaultProfile, ...loadStored<Partial<Profile>>("legal-impact-profile", {}) });
@@ -123,6 +125,19 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    fetchRightsTopics()
+      .then(setLiveRightsTopics)
+      .catch(() => showNotice("Couldn't reach the LifeLaw backend, showing local rights topics instead."));
+  }, []);
+
+  useEffect(() => {
+    if (!profileLoaded) return;
+    fetchFeed(profile.state, profile.tags)
+      .then(setLiveFeedItems)
+      .catch(() => showNotice("Couldn't reach the LifeLaw backend, showing a local feed instead."));
+  }, [profileLoaded, profile.state, profile.tags]);
+
+  useEffect(() => {
     if (profileLoaded) window.localStorage.setItem("legal-impact-profile", JSON.stringify(profile));
   }, [profile, profileLoaded]);
   useEffect(() => window.localStorage.setItem("legal-impact-saved-items", JSON.stringify(savedItems)), [savedItems]);
@@ -131,18 +146,18 @@ export default function Home() {
 
   const filteredFeed = useMemo(() => {
     const term = feedQuery.trim().toLowerCase();
-    const matches = feedItems.filter((item) => {
+    const matches = liveFeedItems.filter((item) => {
       const profileMatch = item.affected.some((tag) => profile.tags.includes(tag));
       const queryMatch = !term || [item.title, item.summary, item.jurisdiction, ...item.affected].join(" ").toLowerCase().includes(term);
       const priorityMatch = feedPriority === "All priorities" || item.priority === feedPriority;
       return profileMatch && queryMatch && priorityMatch;
     });
     return [...matches].sort((a, b) => feedSort === "Impact score" ? b.impactScore - a.impactScore : a.title.localeCompare(b.title));
-  }, [feedPriority, feedQuery, feedSort, profile.tags]);
+  }, [feedPriority, feedQuery, feedSort, liveFeedItems, profile.tags]);
   const filteredTopics = useMemo(() => {
     const term = rightsQuery.trim().toLowerCase();
-    if (!term) return rightsTopics;
-    return rightsTopics.filter((topic) =>
+    if (!term) return liveRightsTopics;
+    return liveRightsTopics.filter((topic) =>
       [topic.name, topic.summary, ...topic.laws, ...topic.cases, ...topic.questions]
         .join(" ")
         .toLowerCase()

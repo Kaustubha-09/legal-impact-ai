@@ -1,6 +1,13 @@
 from fastapi import APIRouter
 
-from app.schemas.legal import LegalAnswerOut, LegalQuestionIn, LegalSearchIn, UserProfileIn
+from app.schemas.legal import (
+    FeedItemOut,
+    LegalAnswerOut,
+    LegalQuestionIn,
+    LegalSearchIn,
+    RightsTopicOut,
+    UserProfileIn,
+)
 from app.services.ai import answer_legal_question
 from app.services.catalog import RIGHTS_TOPICS, get_personalized_feed, search_documents
 from app.services.sources import planned_source_connectors
@@ -21,10 +28,11 @@ def save_profile(profile: UserProfileIn) -> dict[str, object]:
 @router.get("/feed")
 def personalized_feed(state: str = "CA", tags: str = "Tenant") -> dict[str, object]:
     selected_tags = [tag.strip() for tag in tags.split(",") if tag.strip()]
+    items = [FeedItemOut(**item) for item in get_personalized_feed(state, selected_tags)]
     return {
         "state": state,
         "tags": selected_tags,
-        "items": get_personalized_feed(state, selected_tags),
+        "items": items,
     }
 
 
@@ -34,8 +42,8 @@ def legal_qa(payload: LegalQuestionIn) -> LegalAnswerOut:
 
 
 @router.get("/rights")
-def rights_library() -> dict[str, list[str]]:
-    return {"topics": RIGHTS_TOPICS}
+def rights_library() -> dict[str, list[RightsTopicOut]]:
+    return {"topics": [RightsTopicOut(**topic) for topic in RIGHTS_TOPICS]}
 
 
 @router.post("/search")

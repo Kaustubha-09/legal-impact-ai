@@ -19,6 +19,19 @@ class FeedItemOut(BaseModel):
     why_this_matters: str
     personal_impact: str
     source_citations: list[str]
+    publication_date: str
+    priority: str
+    confidence: str
+    impact_score: int
+
+
+class RightsTopicOut(BaseModel):
+    name: str
+    summary: str
+    laws: list[str]
+    cases: list[str]
+    questions: list[str]
+    state_notes: str
 
 
 class LegalQuestionIn(BaseModel):

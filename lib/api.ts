@@ -25,3 +25,96 @@ export function askLegalQuestion(
     body: JSON.stringify({ question, jurisdiction, profile_tags: profileTags }),
   });
 }
+
+type FeedItemApi = {
+  title: string;
+  summary: string;
+  jurisdiction: string;
+  source_type: string;
+  effective_date: string | null;
+  who_is_affected: string[];
+  rights_affected: string[];
+  why_this_matters: string;
+  personal_impact: string;
+  source_citations: string[];
+  publication_date: string;
+  priority: string;
+  confidence: string;
+  impact_score: number;
+};
+
+export type FeedItem = {
+  title: string;
+  summary: string;
+  jurisdiction: string;
+  sourceType: string;
+  effectiveDate: string | null;
+  affected: string[];
+  rights: string[];
+  whyItMatters: string;
+  personalImpact: string;
+  citations: string[];
+  publicationDate: string;
+  priority: string;
+  confidence: string;
+  impactScore: number;
+};
+
+function mapFeedItem(item: FeedItemApi): FeedItem {
+  return {
+    title: item.title,
+    summary: item.summary,
+    jurisdiction: item.jurisdiction,
+    sourceType: item.source_type,
+    effectiveDate: item.effective_date,
+    affected: item.who_is_affected,
+    rights: item.rights_affected,
+    whyItMatters: item.why_this_matters,
+    personalImpact: item.personal_impact,
+    citations: item.source_citations,
+    publicationDate: item.publication_date,
+    priority: item.priority,
+    confidence: item.confidence,
+    impactScore: item.impact_score,
+  };
+}
+
+export async function fetchFeed(state: string, tags: string[]): Promise<FeedItem[]> {
+  const params = new URLSearchParams({ state, tags: tags.join(",") });
+  const data = await apiFetch<{ items: FeedItemApi[] }>(`/feed?${params.toString()}`);
+  return data.items.map(mapFeedItem);
+}
+
+type RightsTopicApi = {
+  name: string;
+  summary: string;
+  laws: string[];
+  cases: string[];
+  questions: string[];
+  state_notes: string;
+};
+
+export type RightsTopic = {
+  name: string;
+  summary: string;
+  laws: string[];
+  cases: string[];
+  questions: string[];
+  stateNotes: string;
+};
+
+function mapRightsTopic(topic: RightsTopicApi): RightsTopic {
+  return {
+    name: topic.name,
+    summary: topic.summary,
+    laws: topic.laws,
+    cases: topic.cases,
+    questions: topic.questions,
+    stateNotes: topic.state_notes,
+  };
+}
+
+export async function fetchRightsTopics(): Promise<RightsTopic[]> {
+  const data = await apiFetch<{ topics: RightsTopicApi[] }>("/rights");
+  return data.topics.map(mapRightsTopic);
+}
