@@ -14,6 +14,22 @@ Most "legal AI" products either paste raw statute text at you or let an LLM free
 
 ---
 
+## Screenshots
+
+| Profile + onboarding | Personalized feed + Ask AI |
+|:-:|:-:|
+| <img src="screenshots/00_hero.png" width="430" /> | <img src="screenshots/02_feed.png" width="430" /> |
+
+Left: the legal profile card that drives every downstream feature — state/city/county, industry, profile tags, and an optional email for the weekly digest. Right: the personalized feed (live Congress.gov bills tagged `New`, priority/confidence/impact scoring) sitting next to the Ask AI panel, which answers `"Can my landlord raise rent?"` with a structured, source-cited response instead of freeform LLM text.
+
+<p align="center">
+  <img src="screenshots/04_cases.png" width="820" alt="LifeLaw — court ruling summaries" />
+</p>
+
+Court ruling summaries: select a case from the list and get issue, holding, reasoning, rights affected, who's impacted, and a plain-English explanation — here, *Riley v. California* on warrantless phone searches.
+
+---
+
 ## Features
 
 ### Personalized feed
