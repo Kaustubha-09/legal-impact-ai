@@ -2,10 +2,19 @@ from pydantic import BaseModel, Field
 
 
 class UserProfileIn(BaseModel):
+    device_id: str = Field(min_length=1, max_length=128)
     state: str = Field(min_length=2, max_length=64)
     city: str = Field(min_length=1, max_length=128)
     county: str = Field(min_length=1, max_length=128)
     tags: list[str] = Field(default_factory=list, max_length=20)
+
+
+class UserProfileOut(BaseModel):
+    device_id: str
+    state: str
+    city: str
+    county: str
+    tags: list[str]
 
 
 class FeedItemOut(BaseModel):

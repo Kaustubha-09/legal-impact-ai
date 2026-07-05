@@ -70,6 +70,35 @@ export async function fetchCases(): Promise<CaseDetail[]> {
   return data.cases;
 }
 
+export type DeviceProfile = {
+  deviceId: string;
+  state: string;
+  city: string;
+  county: string;
+  tags: string[];
+};
+
+export async function saveDeviceProfile(profile: DeviceProfile): Promise<void> {
+  await apiFetch("/profiles", {
+    method: "POST",
+    body: JSON.stringify({
+      device_id: profile.deviceId,
+      state: profile.state,
+      city: profile.city,
+      county: profile.county,
+      tags: profile.tags,
+    }),
+  });
+}
+
+export async function fetchDeviceProfile(deviceId: string): Promise<DeviceProfile | null> {
+  const response = await fetch(`${API_BASE_URL}/api/profiles/${deviceId}`);
+  if (response.status === 404) return null;
+  if (!response.ok) throw new ApiError(`Request to /profiles/${deviceId} failed with status ${response.status}`);
+  const data = (await response.json()) as { device_id: string; state: string; city: string; county: string; tags: string[] };
+  return { deviceId: data.device_id, state: data.state, city: data.city, county: data.county, tags: data.tags };
+}
+
 type FeedItemApi = {
   id: string;
   title: string;

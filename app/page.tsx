@@ -38,8 +38,10 @@ import {
 import {
   askLegalQuestion,
   fetchCases,
+  fetchDeviceProfile,
   fetchFeed,
   fetchRightsTopics,
+  saveDeviceProfile,
   searchLegal,
   type CaseDetail,
   type FeedItem,
@@ -127,13 +129,39 @@ export default function Home() {
   const [liveFeedItems, setLiveFeedItems] = useState<FeedItem[]>(feedItems);
   const [liveRightsTopics, setLiveRightsTopics] = useState<RightsTopic[]>(rightsTopics);
   const [seenFeedIds, setSeenFeedIds] = useState<string[]>([]);
+  const [deviceId, setDeviceId] = useState("");
 
   useEffect(() => {
-    setProfile({ ...defaultProfile, ...loadStored<Partial<Profile>>("legal-impact-profile", {}) });
+    const storedProfile = loadStored<Partial<Profile> | null>("legal-impact-profile", null);
+    setProfile({ ...defaultProfile, ...(storedProfile ?? {}) });
     setSavedItems(loadStored<string[]>("legal-impact-saved-items", []));
     setSavedTopics(loadStored<string[]>("legal-impact-saved-topics", []));
     setWatchlists(loadStored<string[]>("legal-impact-watchlists", watchlists));
     setSeenFeedIds(loadStored<string[]>("legal-impact-seen-feed-ids", []));
+
+    let id = window.localStorage.getItem("legal-impact-device-id");
+    if (!id) {
+      id = crypto.randomUUID();
+      window.localStorage.setItem("legal-impact-device-id", id);
+    }
+    setDeviceId(id);
+
+    if (!storedProfile) {
+      fetchDeviceProfile(id)
+        .then((remote) => {
+          if (remote) {
+            setProfile({
+              ...defaultProfile,
+              state: remote.state,
+              city: remote.city,
+              county: remote.county,
+              tags: remote.tags,
+            });
+          }
+        })
+        .catch(() => {});
+    }
+
     setProfileLoaded(true);
   }, []);
 
@@ -221,6 +249,13 @@ export default function Home() {
   function showNotice(message: string) {
     setNotice(message);
     window.setTimeout(() => setNotice(""), 2800);
+  }
+
+  function persistProfile() {
+    if (!deviceId) return;
+    saveDeviceProfile({ deviceId, state: profile.state, city: profile.city, county: profile.county, tags: profile.tags })
+      .then(() => showNotice("Profile saved on this device and synced."))
+      .catch(() => showNotice("Profile saved on this device (couldn't reach the backend to sync)."));
   }
 
   function toggleTag(tag: string) {
@@ -357,7 +392,7 @@ export default function Home() {
             </div>
             <div className="mt-3 flex flex-col gap-2 rounded-md border bg-muted/40 p-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs leading-5 text-muted-foreground">Use your current location to fill the legal jurisdiction. Precise coordinates are used once and are not saved.</p><Button type="button" variant="secondary" disabled={isLocating} onClick={useCurrentLocation}>{isLocating ? "Locating" : <><LocateFixed className="size-4" aria-hidden="true" />Use current location</>}</Button></div>
             <div className="mt-5"><p className="mb-2 text-sm font-medium">Profile tags</p><div className="flex flex-wrap gap-2">{profileTags.map((tag) => <button key={tag} type="button" aria-pressed={profile.tags.includes(tag)} onClick={() => toggleTag(tag)} className={`rounded-full border px-3 py-2 text-sm font-medium transition ${profile.tags.includes(tag) ? 'border-primary bg-primary text-primary-foreground' : 'bg-card hover:bg-muted'}`}>{tag}</button>)}</div></div>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="flex items-center gap-2 text-sm text-muted-foreground"><MapPin className="size-4" aria-hidden="true" />Personalization: {profile.state} and federal sources.</p><Button onClick={() => showNotice("Profile saved on this device.")}>Save profile</Button></div>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="flex items-center gap-2 text-sm text-muted-foreground"><MapPin className="size-4" aria-hidden="true" />Personalization: {profile.state} and federal sources.</p><Button onClick={persistProfile}>Save profile</Button></div>
           </Card>
         </div>
       </section>

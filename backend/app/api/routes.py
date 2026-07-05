@@ -1,6 +1,9 @@
 import httpx
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from app.core.db import get_db
+from app.models.legal import UserProfile
 from app.schemas.legal import (
     CaseDetailOut,
     FeedItemOut,
@@ -9,6 +12,7 @@ from app.schemas.legal import (
     LegalSearchIn,
     RightsTopicOut,
     UserProfileIn,
+    UserProfileOut,
 )
 from app.services.ai import answer_legal_question
 from app.services.catalog import CASE_DETAILS, RIGHTS_TOPICS, get_personalized_feed, search_documents
@@ -24,9 +28,46 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@router.post("/profiles")
-def save_profile(profile: UserProfileIn) -> dict[str, object]:
-    return {"saved": True, "profile": profile.model_dump()}
+@router.post("/profiles", response_model=UserProfileOut)
+def save_profile(profile: UserProfileIn, db: Session = Depends(get_db)) -> UserProfileOut:
+    existing = db.query(UserProfile).filter(UserProfile.clerk_user_id == profile.device_id).first()
+    if existing:
+        existing.state = profile.state
+        existing.city = profile.city
+        existing.county = profile.county
+        existing.tags = profile.tags
+    else:
+        existing = UserProfile(
+            clerk_user_id=profile.device_id,
+            state=profile.state,
+            city=profile.city,
+            county=profile.county,
+            tags=profile.tags,
+        )
+        db.add(existing)
+    db.commit()
+    db.refresh(existing)
+    return UserProfileOut(
+        device_id=existing.clerk_user_id,
+        state=existing.state,
+        city=existing.city,
+        county=existing.county,
+        tags=existing.tags,
+    )
+
+
+@router.get("/profiles/{device_id}", response_model=UserProfileOut)
+def get_profile(device_id: str, db: Session = Depends(get_db)) -> UserProfileOut:
+    profile = db.query(UserProfile).filter(UserProfile.clerk_user_id == device_id).first()
+    if profile is None:
+        raise HTTPException(status_code=404, detail="No profile found for this device")
+    return UserProfileOut(
+        device_id=profile.clerk_user_id,
+        state=profile.state,
+        city=profile.city,
+        county=profile.county,
+        tags=profile.tags,
+    )
 
 
 @router.get("/feed")
