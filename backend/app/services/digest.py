@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import html
 from datetime import UTC, date as date_type
 from datetime import datetime
 
@@ -57,7 +58,7 @@ def _new_items_for_profile(profile: UserProfile, live_items: list[dict]) -> list
 
 def _render_email_html(items: list[dict], device_id: str) -> str:
     rows = "".join(
-        f"<li><strong>{item['title']}</strong><br>{item['summary']}</li>"
+        f"<li><strong>{html.escape(item['title'])}</strong><br>{html.escape(item['summary'])}</li>"
         for item in items
     )
     unsubscribe_url = f"{API_URL}/api/unsubscribe/{device_id}"
