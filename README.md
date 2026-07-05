@@ -75,26 +75,26 @@ Court ruling summaries: select a case from the list and get issue, holding, reas
                     └──────┬──────────────┬───────┘
                            │              │
               ┌────────────┘              └────────────┐
-              ▼                                         ▼
-   ┌─────────────────────┐                  ┌───────────────────────┐
-   │ Live bill ingestion  │                  │ RAG retrieval          │
-   │ congress.py          │                  │ embeddings.py          │
-   │ legiscan.py          │                  │ (sentence-transformers)│
-   │ (Congress.gov,       │                  │ retrieval.py           │
-   │  LegiScan APIs)      │                  │ (pgvector cosine)      │
-   └───────────────────────┘                  └───────────┬───────────┘
-                                                            ▼
+              ▼                                        ▼
+   ┌─────────────────────┐                 ┌───────────────────────┐
+   │ Live bill ingestion │                 │ RAG retrieval         │
+   │ congress.py         │                 │ embeddings.py         │
+   │ legiscan.py         │                 │(sentence-transformers)│
+   │ (Congress.gov,      │                 │ retrieval.py          │
+   │  LegiScan APIs)     │                 │ (pgvector cosine)     │
+   └─────────────────────┘                 └───────────┬───────────┘
+                                                       ▼     
                                               ┌───────────────────────┐
-                                              │ PostgreSQL + pgvector  │
-                                              │ legal_sources          │
-                                              │ user_profiles          │
+                                              │ PostgreSQL + pgvector │
+                                              │ legal_sources         │
+                                              │ user_profiles         │
                                               └───────────┬───────────┘
-                                                            ▼
+                                                          ▼  
                                               ┌───────────────────────┐
-                                              │ digest.py (Resend)     │
-                                              │ weekly email per       │
-                                              │ profile, new-since-    │
-                                              │ last-send diffing      │
+                                              │ digest.py (Resend)    │
+                                              │ weekly email per      │
+                                              │ profile, new-since-   │
+                                              │ last-send diffing     │
                                               └───────────────────────┘
 ```
 
