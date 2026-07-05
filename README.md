@@ -59,26 +59,26 @@ Most "legal AI" products either paste raw statute text at you or let an LLM free
                     └──────┬──────────────┬───────┘
                            │              │
               ┌────────────┘              └────────────┐
-              ▼                                         ▼
-   ┌─────────────────────┐                  ┌───────────────────────┐
-   │ Live bill ingestion  │                  │ RAG retrieval          │
-   │ congress.py          │                  │ embeddings.py          │
-   │ legiscan.py          │                  │ (sentence-transformers)│
-   │ (Congress.gov,       │                  │ retrieval.py           │
-   │  LegiScan APIs)      │                  │ (pgvector cosine)      │
-   └───────────────────────┘                  └───────────┬───────────┘
-                                                            ▼
+              ▼                                        ▼
+   ┌─────────────────────┐                 ┌───────────────────────┐
+   │ Live bill ingestion │                 │ RAG retrieval         │
+   │ congress.py         │                 │ embeddings.py         │
+   │ legiscan.py         │                 │(sentence-transformers)│
+   │ (Congress.gov,      │                 │ retrieval.py          │
+   │  LegiScan APIs)     │                 │ (pgvector cosine)     │
+   └─────────────────────┘                 └───────────┬───────────┘
+                                                       ▼     
                                               ┌───────────────────────┐
-                                              │ PostgreSQL + pgvector  │
-                                              │ legal_sources          │
-                                              │ user_profiles          │
+                                              │ PostgreSQL + pgvector │
+                                              │ legal_sources         │
+                                              │ user_profiles         │
                                               └───────────┬───────────┘
-                                                            ▼
+                                                          ▼  
                                               ┌───────────────────────┐
-                                              │ digest.py (Resend)     │
-                                              │ weekly email per       │
-                                              │ profile, new-since-    │
-                                              │ last-send diffing      │
+                                              │ digest.py (Resend)    │
+                                              │ weekly email per      │
+                                              │ profile, new-since-   │
+                                              │ last-send diffing     │
                                               └───────────────────────┘
 ```
 
