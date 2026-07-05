@@ -39,6 +39,22 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        jurisdictionFederal: {
+          DEFAULT: "hsl(var(--jurisdiction-federal))",
+          foreground: "hsl(var(--jurisdiction-federal-foreground))",
+        },
+        jurisdictionState: {
+          DEFAULT: "hsl(var(--jurisdiction-state))",
+          foreground: "hsl(var(--jurisdiction-state-foreground))",
+        },
+        jurisdictionCourt: {
+          DEFAULT: "hsl(var(--jurisdiction-court))",
+          foreground: "hsl(var(--jurisdiction-court-foreground))",
+        },
+        jurisdictionLocal: {
+          DEFAULT: "hsl(var(--jurisdiction-local))",
+          foreground: "hsl(var(--jurisdiction-local-foreground))",
+        },
       },
       boxShadow: {
         panel: "0 16px 40px -24px rgb(15 23 42 / 0.38)",

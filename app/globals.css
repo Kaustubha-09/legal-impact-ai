@@ -20,6 +20,15 @@
   --border: 218 18% 84%;
   --input: 218 18% 84%;
   --ring: 205 78% 28%;
+
+  --jurisdiction-federal: 230 55% 90%;
+  --jurisdiction-federal-foreground: 230 45% 28%;
+  --jurisdiction-state: 150 40% 87%;
+  --jurisdiction-state-foreground: 155 40% 22%;
+  --jurisdiction-court: 280 40% 91%;
+  --jurisdiction-court-foreground: 280 35% 30%;
+  --jurisdiction-local: 35 80% 88%;
+  --jurisdiction-local-foreground: 30 55% 24%;
 }
 
 * {

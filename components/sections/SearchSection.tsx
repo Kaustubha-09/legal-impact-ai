@@ -2,6 +2,7 @@ import { FileSearch } from "lucide-react";
 import { Badge, Button, Card, Input, Select } from "@/components/ui";
 import { EmptyState } from "@/components/page-blocks";
 import type { SearchResult } from "@/lib/api";
+import { jurisdictionBadgeClass } from "@/lib/jurisdiction";
 
 export function SearchSection({
   search,
@@ -45,7 +46,7 @@ export function SearchSection({
       <div className="space-y-4">
         {filteredResults.length ? filteredResults.map((result) => (
           <Card key={result.title} className="p-5">
-            <div className="flex flex-wrap gap-2"><Badge>{result.type}</Badge><Badge className="bg-accent text-accent-foreground">{result.jurisdiction}</Badge><Badge className="bg-card">{result.category}</Badge></div>
+            <div className="flex flex-wrap gap-2"><Badge>{result.type}</Badge><Badge className={jurisdictionBadgeClass(result.jurisdiction)}>{result.jurisdiction}</Badge><Badge className="bg-card">{result.category}</Badge></div>
             <h3 className="mt-3 text-lg font-semibold">{result.title}</h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{result.summary}</p>
             <p className="mt-3 text-xs text-muted-foreground">Date: {result.date}</p>

@@ -2,6 +2,7 @@ import { Building2, ExternalLink } from "lucide-react";
 import { Badge, Card } from "@/components/ui";
 import { CaseField } from "@/components/page-blocks";
 import type { CaseDetail } from "@/lib/api";
+import { jurisdictionBadgeClass } from "@/lib/jurisdiction";
 
 export function CasesSection({
   liveCases,
@@ -31,7 +32,7 @@ export function CasesSection({
           </div>
           <Card className="p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div><Badge>{selectedCase.court}</Badge><h3 className="mt-3 text-xl font-semibold">{selectedCase.name}</h3><p className="mt-1 text-sm text-muted-foreground">{selectedCase.citation} - {selectedCase.date}</p></div>
+              <div><Badge className={jurisdictionBadgeClass(selectedCase.court)}>{selectedCase.court}</Badge><h3 className="mt-3 text-xl font-semibold">{selectedCase.name}</h3><p className="mt-1 text-sm text-muted-foreground">{selectedCase.citation} - {selectedCase.date}</p></div>
               <Building2 className="size-6 text-primary" aria-hidden="true" />
             </div>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
