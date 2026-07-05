@@ -35,6 +35,7 @@ import {
   rightsTopics,
   searchResults,
 } from "@/lib/data";
+import { askLegalQuestion } from "@/lib/api";
 
 const nav = [
   { label: "Feed", icon: Bell },
@@ -90,6 +91,7 @@ export default function Home() {
   const [query, setQuery] = useState("Can my landlord raise rent?");
   const [answer, setAnswer] = useState<LegalAnswer>(qaSample);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isAsking, setIsAsking] = useState(false);
   const [savedItems, setSavedItems] = useState<string[]>([]);
   const [savedTopics, setSavedTopics] = useState<string[]>([]);
   const [showSaved, setShowSaved] = useState(false);
@@ -212,12 +214,21 @@ export default function Home() {
     );
   }
 
-  function askQuestion(question = query) {
+  async function askQuestion(question = query) {
     const trimmed = question.trim();
     if (!trimmed) return;
     setQuery(question);
-    setAnswer(getLifeImpactAnswer(trimmed, profile));
     setSuggestions(getQuestionSuggestions(trimmed));
+    setIsAsking(true);
+    try {
+      const response = await askLegalQuestion(trimmed, profile.state, profile.tags);
+      setAnswer(response);
+    } catch {
+      showNotice("Couldn't reach the LifeLaw backend, showing a local answer instead.");
+      setAnswer(getLifeImpactAnswer(trimmed, profile));
+    } finally {
+      setIsAsking(false);
+    }
   }
 
   function toggleSaved(title: string, kind: "item" | "topic") {
@@ -308,7 +319,7 @@ export default function Home() {
         </div>
 
         <aside className="space-y-6">
-          <Card className="p-5" id="ask-ai"><div className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-semibold">LifeLaw Q&A</h2><p className="mt-1 text-sm text-muted-foreground">Local life-impact analysis using your saved profile and the built-in legal guidance library.</p></div><Badge className="bg-card">Local analysis</Badge></div><div className="mt-4 flex gap-2"><Input value={query} placeholder="Type a legal question" onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => event.key === "Enter" && askQuestion()} /><Button aria-label="Ask question" onClick={() => askQuestion()}><Search className="size-4" aria-hidden="true" /></Button></div><div className="mt-3 flex flex-wrap gap-2">{qaExamples.map((example) => <button key={example} type="button" onClick={() => askQuestion(example)} className="rounded-full border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted">{example}</button>)}</div><div className="mt-4 rounded-md border bg-muted/40 p-4" aria-live="polite"><p className="text-sm font-semibold">Quick answer</p><p className="mt-2 text-sm leading-6 text-muted-foreground">{answer.quick_answer}</p><LifeImpactSummary answer={answer} />{suggestions.length > 0 && <div className="mt-4 rounded-md border border-primary/30 bg-card p-3"><p className="text-sm font-semibold">Help me refine this question</p><p className="mt-1 text-xs leading-5 text-muted-foreground">A more specific question can produce a better answer.</p><div className="mt-3 flex flex-wrap gap-2">{suggestions.map((suggestion) => <button key={suggestion} type="button" onClick={() => askQuestion(suggestion)} className="rounded-full border bg-background px-3 py-1.5 text-left text-xs font-medium hover:bg-muted">{suggestion}</button>)}</div></div>}<StructuredAnswer label="Rights" values={answer.rights} /><StructuredAnswer label="Responsibilities" values={answer.responsibilities} /><StructuredAnswer label="Relevant laws" values={answer.relevant_laws} /><StructuredAnswer label="Court rulings" values={answer.court_rulings} /><StructuredAnswer label="Exceptions" values={answer.exceptions} /><StructuredAnswer label="Deadlines" values={answer.deadlines} /><StructuredAnswer label="Next steps" values={answer.next_steps} /><StructuredAnswer label="Sources" values={answer.sources} /><p className="mt-4 rounded-md border bg-card p-3 text-xs leading-5 text-muted-foreground">{answer.disclaimer}</p></div></Card>
+          <Card className="p-5" id="ask-ai"><div className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-semibold">LifeLaw Q&A</h2><p className="mt-1 text-sm text-muted-foreground">Life-impact analysis from the LifeLaw backend, using your saved profile.</p></div><Badge className="bg-card">{isAsking ? "Asking…" : "Backend analysis"}</Badge></div><div className="mt-4 flex gap-2"><Input value={query} placeholder="Type a legal question" onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => event.key === "Enter" && askQuestion()} /><Button aria-label="Ask question" onClick={() => askQuestion()} disabled={isAsking}><Search className="size-4" aria-hidden="true" /></Button></div><div className="mt-3 flex flex-wrap gap-2">{qaExamples.map((example) => <button key={example} type="button" onClick={() => askQuestion(example)} className="rounded-full border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted">{example}</button>)}</div><div className="mt-4 rounded-md border bg-muted/40 p-4" aria-live="polite"><p className="text-sm font-semibold">Quick answer</p><p className="mt-2 text-sm leading-6 text-muted-foreground">{answer.quick_answer}</p><LifeImpactSummary answer={answer} />{suggestions.length > 0 && <div className="mt-4 rounded-md border border-primary/30 bg-card p-3"><p className="text-sm font-semibold">Help me refine this question</p><p className="mt-1 text-xs leading-5 text-muted-foreground">A more specific question can produce a better answer.</p><div className="mt-3 flex flex-wrap gap-2">{suggestions.map((suggestion) => <button key={suggestion} type="button" onClick={() => askQuestion(suggestion)} className="rounded-full border bg-background px-3 py-1.5 text-left text-xs font-medium hover:bg-muted">{suggestion}</button>)}</div></div>}<StructuredAnswer label="Rights" values={answer.rights} /><StructuredAnswer label="Responsibilities" values={answer.responsibilities} /><StructuredAnswer label="Relevant laws" values={answer.relevant_laws} /><StructuredAnswer label="Court rulings" values={answer.court_rulings} /><StructuredAnswer label="Exceptions" values={answer.exceptions} /><StructuredAnswer label="Deadlines" values={answer.deadlines} /><StructuredAnswer label="Next steps" values={answer.next_steps} /><StructuredAnswer label="Sources" values={answer.sources} /><p className="mt-4 rounded-md border bg-card p-3 text-xs leading-5 text-muted-foreground">{answer.disclaimer}</p></div></Card>
 
           <Card className="p-5" id="saved-alerts"><div className="flex items-center gap-2"><Bell className="size-5 text-primary" aria-hidden="true" /><h2 className="text-xl font-semibold">Watchlists and alerts</h2></div><p className="mt-1 text-sm text-muted-foreground">Track topics and review a personalized weekly digest.</p><div className="mt-4 flex gap-2"><Input value={watchInput} placeholder="Add a watchlist topic" onChange={(event) => setWatchInput(event.target.value)} onKeyDown={(event) => event.key === "Enter" && addWatchlist()} /><Button aria-label="Add watchlist" onClick={addWatchlist}><Plus className="size-4" aria-hidden="true" /></Button></div><div className="mt-3 space-y-2">{watchlists.map((watch) => <div key={watch} className="flex items-center justify-between gap-3 rounded-md border bg-background p-3"><span className="text-sm font-medium">{watch}</span><button type="button" aria-label={`Remove ${watch} watchlist`} onClick={() => setWatchlists((current) => current.filter((item) => item !== watch))} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive"><Trash2 className="size-4" aria-hidden="true" /></button></div>)}</div><Button className="mt-4 w-full" variant="secondary" onClick={() => setShowWeeklySummary((current) => !current)}>{showWeeklySummary ? "Hide weekly summary" : 'Weekly "What changed for me?"'}</Button>{showWeeklySummary && <div className="mt-3 rounded-md border border-primary/30 bg-secondary/50 p-3 text-sm leading-6 text-secondary-foreground"><strong>This week:</strong> {filteredFeed.length ? `${filteredFeed.length} updates match ${profile.tags.join(", ") || "your profile"}. Review the saved feed items and your watchlists for changes.` : "No current feed items match your profile. Add tags or a watchlist to broaden monitoring."}</div>}</Card>
         </aside>
