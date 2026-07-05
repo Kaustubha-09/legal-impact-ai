@@ -7,6 +7,7 @@ class UserProfileIn(BaseModel):
     city: str = Field(min_length=1, max_length=128)
     county: str = Field(min_length=1, max_length=128)
     tags: list[str] = Field(default_factory=list, max_length=20)
+    email: str | None = Field(default=None, max_length=256)
 
 
 class UserProfileOut(BaseModel):
@@ -15,6 +16,7 @@ class UserProfileOut(BaseModel):
     city: str
     county: str
     tags: list[str]
+    email: str | None = None
 
 
 class FeedItemOut(BaseModel):

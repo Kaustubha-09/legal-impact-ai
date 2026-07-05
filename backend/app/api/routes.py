@@ -36,6 +36,7 @@ def save_profile(profile: UserProfileIn, db: Session = Depends(get_db)) -> UserP
         existing.city = profile.city
         existing.county = profile.county
         existing.tags = profile.tags
+        existing.email = profile.email
     else:
         existing = UserProfile(
             clerk_user_id=profile.device_id,
@@ -43,6 +44,7 @@ def save_profile(profile: UserProfileIn, db: Session = Depends(get_db)) -> UserP
             city=profile.city,
             county=profile.county,
             tags=profile.tags,
+            email=profile.email,
         )
         db.add(existing)
     db.commit()
@@ -53,6 +55,7 @@ def save_profile(profile: UserProfileIn, db: Session = Depends(get_db)) -> UserP
         city=existing.city,
         county=existing.county,
         tags=existing.tags,
+        email=existing.email,
     )
 
 
@@ -67,7 +70,18 @@ def get_profile(device_id: str, db: Session = Depends(get_db)) -> UserProfileOut
         city=profile.city,
         county=profile.county,
         tags=profile.tags,
+        email=profile.email,
     )
+
+
+@router.get("/unsubscribe/{device_id}")
+def unsubscribe(device_id: str, db: Session = Depends(get_db)) -> dict[str, str]:
+    profile = db.query(UserProfile).filter(UserProfile.clerk_user_id == device_id).first()
+    if profile is None:
+        raise HTTPException(status_code=404, detail="No profile found for this device")
+    profile.email = None
+    db.commit()
+    return {"status": "unsubscribed"}
 
 
 @router.get("/feed")

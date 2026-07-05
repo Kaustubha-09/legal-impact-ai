@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     govinfo_api_key: str | None = None
     courtlistener_api_key: str | None = None
     legiscan_api_key: str | None = None
+    resend_api_key: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

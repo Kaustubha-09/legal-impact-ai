@@ -19,6 +19,8 @@ class UserProfile(Base):
     county: Mapped[str] = mapped_column(String(128))
     tags: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    email: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    last_digest_sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
 class LegalSource(Base):

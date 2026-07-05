@@ -6,4 +6,5 @@ export type Profile = {
   industry: string;
   occupation: string;
   tags: string[];
+  email: string;
 };

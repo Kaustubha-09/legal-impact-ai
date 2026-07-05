@@ -50,6 +50,7 @@ const defaultProfile: Profile = {
   industry: "",
   occupation: "",
   tags: ["Tenant", "H-1B", "Gig worker"],
+  email: "",
 };
 
 function loadStored<T>(key: string, fallback: T): T {
@@ -121,6 +122,7 @@ export default function Home() {
               city: remote.city,
               county: remote.county,
               tags: remote.tags,
+              email: remote.email ?? "",
             });
           }
         })
@@ -219,7 +221,7 @@ export default function Home() {
 
   function persistProfile() {
     if (!deviceId) return;
-    saveDeviceProfile({ deviceId, state: profile.state, city: profile.city, county: profile.county, tags: profile.tags })
+    saveDeviceProfile({ deviceId, state: profile.state, city: profile.city, county: profile.county, tags: profile.tags, email: profile.email || null })
       .then(() => showNotice("Profile saved on this device and synced."))
       .catch(() => showNotice("Profile saved on this device (couldn't reach the backend to sync)."));
   }

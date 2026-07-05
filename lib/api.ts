@@ -76,6 +76,7 @@ export type DeviceProfile = {
   city: string;
   county: string;
   tags: string[];
+  email: string | null;
 };
 
 export async function saveDeviceProfile(profile: DeviceProfile): Promise<void> {
@@ -87,6 +88,7 @@ export async function saveDeviceProfile(profile: DeviceProfile): Promise<void> {
       city: profile.city,
       county: profile.county,
       tags: profile.tags,
+      email: profile.email || null,
     }),
   });
 }
@@ -95,8 +97,8 @@ export async function fetchDeviceProfile(deviceId: string): Promise<DeviceProfil
   const response = await fetch(`${API_BASE_URL}/api/profiles/${deviceId}`);
   if (response.status === 404) return null;
   if (!response.ok) throw new ApiError(`Request to /profiles/${deviceId} failed with status ${response.status}`);
-  const data = (await response.json()) as { device_id: string; state: string; city: string; county: string; tags: string[] };
-  return { deviceId: data.device_id, state: data.state, city: data.city, county: data.county, tags: data.tags };
+  const data = (await response.json()) as { device_id: string; state: string; city: string; county: string; tags: string[]; email: string | null };
+  return { deviceId: data.device_id, state: data.state, city: data.city, county: data.county, tags: data.tags, email: data.email };
 }
 
 type FeedItemApi = {
