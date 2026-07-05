@@ -1,0 +1,9 @@
+{
+  "name": "LifeLaw",
+  "short_name": "Legal Impact",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfaf7",
+  "theme_color": "#0f5d80",
+  "icons": []
+}
