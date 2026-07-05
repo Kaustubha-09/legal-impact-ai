@@ -33,7 +33,7 @@ class LegalSource(Base):
     published_date: Mapped[date | None] = mapped_column(Date)
     raw_text: Mapped[str] = mapped_column(Text)
     metadata_json: Mapped[dict] = mapped_column(JSONB, default=dict)
-    embedding: Mapped[list[float] | None] = mapped_column(Vector(1536))
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(384))
 
 
 class FeedItem(Base):

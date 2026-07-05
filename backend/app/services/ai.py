@@ -1,4 +1,5 @@
 from app.schemas.legal import LegalAnswerOut, LegalQuestionIn
+from app.services.retrieval import retrieve_best_match
 import re
 
 DISCLAIMER = (
@@ -7,9 +8,42 @@ DISCLAIMER = (
 )
 
 
+def _answer_from_retrieved_document(match: dict) -> LegalAnswerOut:
+    metadata = match["metadata"]
+    if metadata["kind"] == "rights_topic":
+        return LegalAnswerOut(
+            quick_answer=metadata["summary"],
+            rights=[f"Right to understand {metadata['name'].lower()} in your jurisdiction."],
+            responsibilities=["Confirm how these general rights apply to your specific facts and state."],
+            relevant_laws=metadata["laws"],
+            court_rulings=metadata["cases"] or ["No case-specific ruling is selected without more facts."],
+            exceptions=[metadata["state_notes"]],
+            deadlines=["Deadlines are not identified from this reference record."],
+            next_steps=[
+                f"Review the {metadata['name']} topic in the rights library for related laws and cases.",
+                "Contact a licensed attorney or legal aid office for guidance on your specific facts.",
+            ],
+            sources=metadata["laws"],
+            disclaimer=DISCLAIMER,
+        )
+    return LegalAnswerOut(
+        quick_answer=metadata["summary"],
+        rights=["Right to review the official source text before relying on this summary."],
+        responsibilities=["Confirm how this record applies to your specific facts and jurisdiction."],
+        relevant_laws=[metadata["type"]],
+        court_rulings=[match["title"]] if metadata["type"] == "Court opinion" else ["No case-specific ruling cited."],
+        exceptions=["Facts, dates, and jurisdiction can change how this record applies."],
+        deadlines=["Deadlines are not identified from this reference record."],
+        next_steps=[
+            "Read the full source text before relying on this summary.",
+            "Contact a licensed attorney or legal aid office for guidance on your specific facts.",
+        ],
+        sources=[f"{match['title']} ({metadata['jurisdiction']})"],
+        disclaimer=DISCLAIMER,
+    )
+
+
 def answer_legal_question(payload: LegalQuestionIn) -> LegalAnswerOut:
-    # Production path: retrieve cited source chunks with pgvector, then call OpenAI
-    # with strict JSON schema output and source-grounding checks.
     if not payload.jurisdiction:
         return LegalAnswerOut(
             quick_answer="A jurisdiction is required before this can be answered.",
@@ -304,6 +338,10 @@ def answer_legal_question(payload: LegalQuestionIn) -> LegalAnswerOut:
             sources=["USCIS policy resources", "U.S. Customs and Border Protection I-94 guidance", "8 CFR"],
             disclaimer=DISCLAIMER,
         )
+
+    retrieved = retrieve_best_match(question)
+    if retrieved is not None:
+        return _answer_from_retrieved_document(retrieved)
 
     return LegalAnswerOut(
         quick_answer=(
