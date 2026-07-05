@@ -35,7 +35,15 @@ import {
   rightsTopics,
   searchResults,
 } from "@/lib/data";
-import { askLegalQuestion, fetchFeed, fetchRightsTopics, type FeedItem, type RightsTopic } from "@/lib/api";
+import {
+  askLegalQuestion,
+  fetchFeed,
+  fetchRightsTopics,
+  searchLegal,
+  type FeedItem,
+  type RightsTopic,
+  type SearchResult,
+} from "@/lib/api";
 
 const nav = [
   { label: "Feed", icon: Bell },
@@ -177,15 +185,25 @@ export default function Home() {
         .includes(term),
     );
   }, [rightsQuery]);
-  const filteredResults = useMemo(() => {
-    const term = activeSearch.trim().toLowerCase();
-    return searchResults.filter((result) => {
-      const matchesTerm = !term || [result.title, result.summary, result.category].join(" ").toLowerCase().includes(term);
-      const matchesJurisdiction = jurisdiction === "All jurisdictions" || result.jurisdiction === jurisdiction;
-      const matchesSource = sourceType === "All sources" || result.type === sourceType;
-      return matchesTerm && matchesJurisdiction && matchesSource;
-    });
+  const [liveResults, setLiveResults] = useState<SearchResult[]>([]);
+
+  useEffect(() => {
+    searchLegal(activeSearch.trim() || " ", jurisdiction, sourceType)
+      .then(setLiveResults)
+      .catch(() => {
+        showNotice("Couldn't reach the LifeLaw backend, showing local search results instead.");
+        const term = activeSearch.trim().toLowerCase();
+        setLiveResults(
+          searchResults.filter((result) => {
+            const matchesTerm = !term || [result.title, result.summary, result.category].join(" ").toLowerCase().includes(term);
+            const matchesJurisdiction = jurisdiction === "All jurisdictions" || result.jurisdiction === jurisdiction;
+            const matchesSource = sourceType === "All sources" || result.type === sourceType;
+            return matchesTerm && matchesJurisdiction && matchesSource;
+          }),
+        );
+      });
   }, [activeSearch, jurisdiction, sourceType]);
+  const filteredResults = liveResults;
   const selectedCase = courtCases.find((courtCase) => courtCase.name === selectedCaseName) ?? courtCases[0];
 
   function showNotice(message: string) {

@@ -26,6 +26,31 @@ export function askLegalQuestion(
   });
 }
 
+export type SearchResult = {
+  title: string;
+  type: string;
+  jurisdiction: string;
+  date: string;
+  category: string;
+  summary: string;
+};
+
+export async function searchLegal(
+  query: string,
+  jurisdiction: string,
+  sourceType: string,
+): Promise<SearchResult[]> {
+  const data = await apiFetch<{ results: SearchResult[] }>("/search", {
+    method: "POST",
+    body: JSON.stringify({
+      query,
+      jurisdiction: jurisdiction === "All jurisdictions" ? null : jurisdiction,
+      source_type: sourceType === "All sources" ? null : sourceType,
+    }),
+  });
+  return data.results;
+}
+
 type FeedItemApi = {
   id: string;
   title: string;

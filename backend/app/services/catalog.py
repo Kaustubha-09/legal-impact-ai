@@ -165,6 +165,38 @@ LEGAL_DOCUMENTS: list[dict[str, str]] = [
         "category": "Immigration rights",
         "summary": "Defines specialty occupation criteria, petition requirements, and employer filing responsibilities.",
     },
+    {
+        "title": "California Tenant Protection Act",
+        "type": "State statute",
+        "jurisdiction": "California",
+        "date": "Current",
+        "category": "Housing rights",
+        "summary": "Sets statewide baseline protections for certain rent increases and just-cause eviction requirements.",
+    },
+    {
+        "title": "Fair Labor Standards Act",
+        "type": "Federal statute",
+        "jurisdiction": "Federal",
+        "date": "Current",
+        "category": "Employment rights",
+        "summary": "Establishes federal minimum wage, overtime, recordkeeping, and child labor standards.",
+    },
+    {
+        "title": "Bostock v. Clayton County",
+        "type": "Court opinion",
+        "jurisdiction": "U.S. Supreme Court",
+        "date": "2020-06-15",
+        "category": "Employment rights",
+        "summary": "Firing someone for being gay or transgender violates Title VII's prohibition on sex discrimination.",
+    },
+    {
+        "title": "Fair Debt Collection Practices Act",
+        "type": "Federal statute",
+        "jurisdiction": "Federal",
+        "date": "Current",
+        "category": "Consumer rights",
+        "summary": "Restricts abusive, unfair, or deceptive practices by third-party debt collectors, including when and how they may contact consumers.",
+    },
 ]
 
 
