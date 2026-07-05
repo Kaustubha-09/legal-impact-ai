@@ -2,6 +2,7 @@ import httpx
 from fastapi import APIRouter
 
 from app.schemas.legal import (
+    CaseDetailOut,
     FeedItemOut,
     LegalAnswerOut,
     LegalQuestionIn,
@@ -10,7 +11,7 @@ from app.schemas.legal import (
     UserProfileIn,
 )
 from app.services.ai import answer_legal_question
-from app.services.catalog import RIGHTS_TOPICS, get_personalized_feed, search_documents
+from app.services.catalog import CASE_DETAILS, RIGHTS_TOPICS, get_personalized_feed, search_documents
 from app.services.congress import fetch_recent_federal_bills
 from app.services.legiscan import fetch_recent_state_bills
 from app.services.sources import planned_source_connectors
@@ -80,3 +81,8 @@ def legal_search(payload: LegalSearchIn) -> dict[str, object]:
 @router.get("/sources")
 def source_connectors() -> dict[str, str]:
     return planned_source_connectors()
+
+
+@router.get("/cases")
+def case_library() -> dict[str, list[CaseDetailOut]]:
+    return {"cases": [CaseDetailOut(**case) for case in CASE_DETAILS]}

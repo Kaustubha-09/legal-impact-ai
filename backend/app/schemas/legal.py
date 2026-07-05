@@ -54,6 +54,20 @@ class LegalAnswerOut(BaseModel):
     disclaimer: str
 
 
+class CaseDetailOut(BaseModel):
+    name: str
+    court: str
+    date: str
+    citation: str
+    issue: str
+    holding: str
+    reasoning: str
+    rights: str
+    impacted: str
+    explanation: str
+    source: str
+
+
 class LegalSearchIn(BaseModel):
     query: str = Field(min_length=1, max_length=300)
     jurisdiction: str | None = None

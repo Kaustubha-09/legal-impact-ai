@@ -51,6 +51,25 @@ export async function searchLegal(
   return data.results;
 }
 
+export type CaseDetail = {
+  name: string;
+  court: string;
+  date: string;
+  citation: string;
+  issue: string;
+  holding: string;
+  reasoning: string;
+  rights: string;
+  impacted: string;
+  explanation: string;
+  source: string;
+};
+
+export async function fetchCases(): Promise<CaseDetail[]> {
+  const data = await apiFetch<{ cases: CaseDetail[] }>("/cases");
+  return data.cases;
+}
+
 type FeedItemApi = {
   id: string;
   title: string;

@@ -37,9 +37,11 @@ import {
 } from "@/lib/data";
 import {
   askLegalQuestion,
+  fetchCases,
   fetchFeed,
   fetchRightsTopics,
   searchLegal,
+  type CaseDetail,
   type FeedItem,
   type RightsTopic,
   type SearchResult,
@@ -112,6 +114,7 @@ export default function Home() {
   const [jurisdiction, setJurisdiction] = useState("All jurisdictions");
   const [sourceType, setSourceType] = useState("All sources");
   const [selectedCaseName, setSelectedCaseName] = useState(courtCases[0].name);
+  const [liveCases, setLiveCases] = useState<CaseDetail[]>(courtCases);
   const [watchlists, setWatchlists] = useState<string[]>([
     "H-1B fee changes",
     "Rent increase notices",
@@ -138,6 +141,15 @@ export default function Home() {
     fetchRightsTopics()
       .then(setLiveRightsTopics)
       .catch(() => showNotice("Couldn't reach the LifeLaw backend, showing local rights topics instead."));
+  }, []);
+
+  useEffect(() => {
+    fetchCases()
+      .then((cases) => {
+        setLiveCases(cases);
+        if (cases.length > 0) setSelectedCaseName(cases[0].name);
+      })
+      .catch(() => showNotice("Couldn't reach the LifeLaw backend, showing local case summaries instead."));
   }, []);
 
   useEffect(() => {
@@ -204,7 +216,7 @@ export default function Home() {
       });
   }, [activeSearch, jurisdiction, sourceType]);
   const filteredResults = liveResults;
-  const selectedCase = courtCases.find((courtCase) => courtCase.name === selectedCaseName) ?? courtCases[0];
+  const selectedCase = liveCases.find((courtCase) => courtCase.name === selectedCaseName) ?? liveCases[0];
 
   function showNotice(message: string) {
     setNotice(message);
@@ -376,7 +388,7 @@ export default function Home() {
 
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8"><Card className="h-fit p-5" id="search"><h2 className="text-2xl font-bold">Legal search</h2><p className="mt-1 text-sm text-muted-foreground">Search the local MVP source index by words, jurisdiction, and source type.</p><div className="mt-5 space-y-3"><Input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === "Enter" && setActiveSearch(search)} aria-label="Search legal sources" /><div className="grid gap-3 sm:grid-cols-2"><Select value={jurisdiction} onChange={(event) => setJurisdiction(event.target.value)} aria-label="Filter by jurisdiction"><option>All jurisdictions</option><option>Federal</option><option>California</option><option>U.S. Supreme Court</option></Select><Select value={sourceType} onChange={(event) => setSourceType(event.target.value)} aria-label="Filter by source type"><option>All sources</option><option>Court opinion</option><option>Federal statute</option><option>State statute</option><option>Regulation</option></Select></div><Button className="w-full" onClick={() => setActiveSearch(search)}><FileSearch className="size-4" aria-hidden="true" />Search legal sources</Button></div><div className="mt-5 rounded-md border bg-muted/40 p-4"><p className="text-sm font-semibold">Source summary</p><p className="mt-2 text-sm leading-6 text-muted-foreground">{filteredResults.length ? `${filteredResults.length} matching source${filteredResults.length === 1 ? "" : "s"}. Results are summarized from the indexed source metadata; verify the official text before acting.` : "No indexed sources match these filters. Broaden the terms or remove a filter."}</p></div></Card><div className="space-y-4">{filteredResults.length ? filteredResults.map((result) => <Card key={result.title} className="p-5"><div className="flex flex-wrap gap-2"><Badge>{result.type}</Badge><Badge className="bg-accent text-accent-foreground">{result.jurisdiction}</Badge><Badge className="bg-card">{result.category}</Badge></div><h3 className="mt-3 text-lg font-semibold">{result.title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{result.summary}</p><p className="mt-3 text-xs text-muted-foreground">Date: {result.date}</p></Card>) : <EmptyState title="No search results" text="The local source index does not have a matching document yet." />}</div></section>
 
-      <section className="border-t bg-card" id="cases"><div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"><div className="grid gap-6 lg:grid-cols-[0.7fr_1.3fr]"><div><h2 className="text-2xl font-bold">Court ruling summaries</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Select a case to review the issue, holding, reasoning, rights affected, impact, and source.</p><div className="mt-5 space-y-2">{courtCases.map((courtCase) => <button key={courtCase.name} type="button" aria-pressed={selectedCaseName === courtCase.name} onClick={() => setSelectedCaseName(courtCase.name)} className={`block w-full rounded-md border p-3 text-left text-sm font-medium ${selectedCaseName === courtCase.name ? "border-primary bg-secondary" : "bg-background hover:bg-muted"}`}>{courtCase.name}<span className="mt-1 block text-xs font-normal text-muted-foreground">{courtCase.court}</span></button>)}</div></div><Card className="p-5"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><Badge>{selectedCase.court}</Badge><h3 className="mt-3 text-xl font-semibold">{selectedCase.name}</h3><p className="mt-1 text-sm text-muted-foreground">{selectedCase.citation} - {selectedCase.date}</p></div><Building2 className="size-6 text-primary" aria-hidden="true" /></div><div className="mt-5 grid gap-4 md:grid-cols-2"><CaseField title="Issue" text={selectedCase.issue} /><CaseField title="Holding" text={selectedCase.holding} /><CaseField title="Reasoning" text={selectedCase.reasoning} /><CaseField title="Rights affected" text={selectedCase.rights} /><CaseField title="Who is impacted" text={selectedCase.impacted} /></div><div className="mt-4 rounded-md border bg-secondary/55 p-4"><p className="text-sm font-semibold">Plain-English explanation</p><p className="mt-2 text-sm leading-6 text-secondary-foreground">{selectedCase.explanation}</p></div><a href={selectedCase.source} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">Read the source opinion <ExternalLink className="size-4" aria-hidden="true" /></a></Card></div></div></section>
+      <section className="border-t bg-card" id="cases"><div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"><div className="grid gap-6 lg:grid-cols-[0.7fr_1.3fr]"><div><h2 className="text-2xl font-bold">Court ruling summaries</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Select a case to review the issue, holding, reasoning, rights affected, impact, and source.</p><div className="mt-5 space-y-2">{liveCases.map((courtCase) => <button key={courtCase.name} type="button" aria-pressed={selectedCaseName === courtCase.name} onClick={() => setSelectedCaseName(courtCase.name)} className={`block w-full rounded-md border p-3 text-left text-sm font-medium ${selectedCaseName === courtCase.name ? "border-primary bg-secondary" : "bg-background hover:bg-muted"}`}>{courtCase.name}<span className="mt-1 block text-xs font-normal text-muted-foreground">{courtCase.court}</span></button>)}</div></div><Card className="p-5"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><Badge>{selectedCase.court}</Badge><h3 className="mt-3 text-xl font-semibold">{selectedCase.name}</h3><p className="mt-1 text-sm text-muted-foreground">{selectedCase.citation} - {selectedCase.date}</p></div><Building2 className="size-6 text-primary" aria-hidden="true" /></div><div className="mt-5 grid gap-4 md:grid-cols-2"><CaseField title="Issue" text={selectedCase.issue} /><CaseField title="Holding" text={selectedCase.holding} /><CaseField title="Reasoning" text={selectedCase.reasoning} /><CaseField title="Rights affected" text={selectedCase.rights} /><CaseField title="Who is impacted" text={selectedCase.impacted} /></div><div className="mt-4 rounded-md border bg-secondary/55 p-4"><p className="text-sm font-semibold">Plain-English explanation</p><p className="mt-2 text-sm leading-6 text-secondary-foreground">{selectedCase.explanation}</p></div><a href={selectedCase.source} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">Read the source opinion <ExternalLink className="size-4" aria-hidden="true" /></a></Card></div></div></section>
 
       <footer className="mx-auto max-w-7xl px-4 py-6 text-sm text-muted-foreground sm:px-6 lg:px-8"><div className="flex flex-col gap-3 border-t pt-6 md:flex-row md:items-center md:justify-between"><p>LifeLaw is an educational legal intelligence platform, not a law firm.</p><p className="flex items-center gap-2"><AlertCircle className="size-4" aria-hidden="true" />Verify official sources and consult a licensed attorney for legal guidance.</p></div></footer>
     </main>
