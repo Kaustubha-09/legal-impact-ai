@@ -165,13 +165,16 @@ LEGAL_DOCUMENTS: list[dict[str, str]] = [
 ]
 
 
-def get_personalized_feed(state: str, tags: list[str]) -> list[dict[str, Any]]:
+def get_personalized_feed(
+    state: str, tags: list[str], extra_items: list[dict[str, Any]] | None = None
+) -> list[dict[str, Any]]:
     normalized_tags = {tag.casefold() for tag in tags}
+    items = FEED_ITEMS + (extra_items or [])
     if not normalized_tags:
-        return FEED_ITEMS
+        return items
     return [
         item
-        for item in FEED_ITEMS
+        for item in items
         if normalized_tags.intersection(tag.casefold() for tag in item["who_is_affected"])
     ]
 

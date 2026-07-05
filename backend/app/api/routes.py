@@ -1,3 +1,4 @@
+import httpx
 from fastapi import APIRouter
 
 from app.schemas.legal import (
@@ -10,6 +11,7 @@ from app.schemas.legal import (
 )
 from app.services.ai import answer_legal_question
 from app.services.catalog import RIGHTS_TOPICS, get_personalized_feed, search_documents
+from app.services.congress import fetch_recent_federal_bills
 from app.services.sources import planned_source_connectors
 
 router = APIRouter()
@@ -26,9 +28,13 @@ def save_profile(profile: UserProfileIn) -> dict[str, object]:
 
 
 @router.get("/feed")
-def personalized_feed(state: str = "CA", tags: str = "Tenant") -> dict[str, object]:
+async def personalized_feed(state: str = "CA", tags: str = "Tenant") -> dict[str, object]:
     selected_tags = [tag.strip() for tag in tags.split(",") if tag.strip()]
-    items = [FeedItemOut(**item) for item in get_personalized_feed(state, selected_tags)]
+    try:
+        live_bills = await fetch_recent_federal_bills()
+    except httpx.HTTPError:
+        live_bills = []
+    items = [FeedItemOut(**item) for item in get_personalized_feed(state, selected_tags, live_bills)]
     return {
         "state": state,
         "tags": selected_tags,
