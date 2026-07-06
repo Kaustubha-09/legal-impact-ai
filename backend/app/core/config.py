@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     legiscan_api_key: str | None = None
     allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     resend_api_key: str | None = None
+    huggingface_api_key: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
