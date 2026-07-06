@@ -379,6 +379,7 @@ export default function Home() {
             showWeeklySummary={showWeeklySummary}
             setShowWeeklySummary={setShowWeeklySummary}
             feedCount={filteredFeed.length}
+            newFeedItems={newFeedItems}
             profileTags={profile.tags}
           />
         </aside>
