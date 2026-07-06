@@ -23,6 +23,8 @@ STATE_NAME_TO_CODE: dict[str, str] = {
     "West Virginia": "WV", "Wisconsin": "WI", "Wyoming": "WY", "District of Columbia": "DC",
 }
 
+CODE_TO_STATE_NAME: dict[str, str] = {code: name for name, code in STATE_NAME_TO_CODE.items()}
+
 
 def _guess_tags(text: str) -> list[str]:
     haystack = text.casefold()
@@ -60,12 +62,19 @@ def _to_feed_item(bill: dict[str, Any], state_name: str, state_code: str) -> dic
     }
 
 
-async def fetch_recent_state_bills(state_name: str, limit: int = 20) -> list[dict[str, Any]]:
+async def fetch_recent_state_bills(state: str, limit: int = 20) -> list[dict[str, Any]]:
     if not settings.legiscan_api_key:
         return []
-    state_code = STATE_NAME_TO_CODE.get(state_name)
+    state_code = STATE_NAME_TO_CODE.get(state)
+    state_name = state
     if not state_code:
-        return []
+        # Caller may have passed a two-letter code (e.g. the /feed endpoint's
+        # own "CA" default) instead of a full name — resolve the other way too.
+        if state.upper() in CODE_TO_STATE_NAME:
+            state_code = state.upper()
+            state_name = CODE_TO_STATE_NAME[state_code]
+        else:
+            return []
     params = {
         "key": settings.legiscan_api_key,
         "op": "getMasterList",
