@@ -261,6 +261,12 @@ export type LegalAnswer = {
   facts?: string[];
   interpretations?: string[];
   predictions?: string[];
+  matched_source?: {
+    title: string;
+    jurisdiction: string;
+    excerpt: string;
+    confidence: number;
+  } | null;
 };
 
 export type LifeImpactContext = {

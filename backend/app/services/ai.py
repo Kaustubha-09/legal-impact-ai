@@ -1,4 +1,4 @@
-from app.schemas.legal import LegalAnswerOut, LegalQuestionIn
+from app.schemas.legal import LegalAnswerOut, LegalQuestionIn, MatchedSourceOut
 from app.services.retrieval import retrieve_best_match
 import re
 
@@ -7,9 +7,30 @@ DISCLAIMER = (
     "Laws vary by jurisdiction. Consult a licensed attorney for legal guidance."
 )
 
+# How much of the source document's raw text to surface as an excerpt in the
+# "show your work" RAG transparency UI. Truncated at the API layer, not the
+# frontend, so the contract is unambiguous for any future consumer.
+EXCERPT_LENGTH = 200
+
+
+def _build_matched_source(match: dict) -> MatchedSourceOut:
+    raw_text = match["raw_text"].strip()
+    excerpt = raw_text[:EXCERPT_LENGTH] + ("…" if len(raw_text) > EXCERPT_LENGTH else "")
+    # retrieve_best_match returns cosine distance (lower = closer match).
+    # Displayed to the user as "confidence" (higher = better) so the UI
+    # doesn't have to explain an inverted scale.
+    confidence = max(0.0, 1.0 - match["distance"])
+    return MatchedSourceOut(
+        title=match["title"],
+        jurisdiction=match["jurisdiction"],
+        excerpt=excerpt,
+        confidence=round(confidence, 3),
+    )
+
 
 def _answer_from_retrieved_document(match: dict) -> LegalAnswerOut:
     metadata = match["metadata"]
+    matched_source = _build_matched_source(match)
     if metadata["kind"] == "rights_topic":
         return LegalAnswerOut(
             quick_answer=metadata["summary"],
@@ -25,6 +46,7 @@ def _answer_from_retrieved_document(match: dict) -> LegalAnswerOut:
             ],
             sources=metadata["laws"],
             disclaimer=DISCLAIMER,
+            matched_source=matched_source,
         )
     return LegalAnswerOut(
         quick_answer=metadata["summary"],
@@ -40,6 +62,7 @@ def _answer_from_retrieved_document(match: dict) -> LegalAnswerOut:
         ],
         sources=[f"{match['title']} ({metadata['jurisdiction']})"],
         disclaimer=DISCLAIMER,
+        matched_source=matched_source,
     )
 
 

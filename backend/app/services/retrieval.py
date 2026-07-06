@@ -28,5 +28,6 @@ def retrieve_best_match(question: str) -> dict | None:
             "title": source.title,
             "jurisdiction": source.jurisdiction,
             "metadata": source.metadata_json,
+            "raw_text": source.raw_text,
             "distance": float(distance),
         }

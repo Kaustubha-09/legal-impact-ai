@@ -52,6 +52,13 @@ class LegalQuestionIn(BaseModel):
     profile_tags: list[str] = Field(default_factory=list)
 
 
+class MatchedSourceOut(BaseModel):
+    title: str
+    jurisdiction: str
+    excerpt: str
+    confidence: float
+
+
 class LegalAnswerOut(BaseModel):
     quick_answer: str
     rights: list[str]
@@ -63,6 +70,7 @@ class LegalAnswerOut(BaseModel):
     next_steps: list[str]
     sources: list[str]
     disclaimer: str
+    matched_source: MatchedSourceOut | None = None
 
 
 class CaseDetailOut(BaseModel):

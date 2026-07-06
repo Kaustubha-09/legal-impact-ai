@@ -36,6 +36,19 @@ export function AskAiPanel({
         <StructuredAnswer label="Deadlines" values={answer.deadlines} />
         <StructuredAnswer label="Next steps" values={answer.next_steps} />
         <StructuredAnswer label="Sources" values={answer.sources} />
+        {answer.matched_source ? (
+          <div className="mt-4 rounded-md border border-primary/30 bg-card p-3">
+            <p className="text-sm font-semibold">Show your work</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Retrieved from <span className="font-medium text-foreground">{answer.matched_source.title}</span> ({answer.matched_source.jurisdiction}) — {Math.round(answer.matched_source.confidence * 100)}% confidence match.
+            </p>
+            <p className="mt-2 rounded border bg-muted/40 p-2 text-xs leading-5 text-muted-foreground">{answer.matched_source.excerpt}</p>
+          </div>
+        ) : (
+          <div className="mt-4 rounded-md border border-dashed bg-muted/20 p-3">
+            <p className="text-xs leading-5 text-muted-foreground">No specific source document was retrieved for this answer — it isn&apos;t grounded in a matched record from the legal corpus.</p>
+          </div>
+        )}
         <p className="mt-4 rounded-md border bg-card p-3 text-xs leading-5 text-muted-foreground">{answer.disclaimer}</p>
       </div>
     </Card>
