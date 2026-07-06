@@ -273,3 +273,27 @@ export async function postToThread(threadId: string, deviceId: string, tag: stri
   });
   return mapThread(data);
 }
+
+export type BillStage = { date: string; label: string };
+
+export type BillTimeline = {
+  id: string;
+  title: string;
+  jurisdiction: string;
+  source: string;
+  url: string;
+  stages: BillStage[];
+};
+
+// Only feed items backed by a live Congress.gov/LegiScan bill have a
+// timeline — static catalog entries and cases never will, so callers can
+// skip rendering the "View timeline" trigger for those without a wasted
+// request.
+export function hasBillTimeline(feedItemId: string): boolean {
+  return feedItemId.startsWith("congress-") || feedItemId.startsWith("legiscan-");
+}
+
+export async function fetchBillTimeline(feedItemId: string, title: string, jurisdiction: string): Promise<BillTimeline> {
+  const params = new URLSearchParams({ title, jurisdiction });
+  return apiFetch<BillTimeline>(`/bills/${feedItemId}/timeline?${params.toString()}`);
+}
