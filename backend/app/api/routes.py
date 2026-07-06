@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.models.legal import DiscussionPost, DiscussionThread, UserProfile
 from app.schemas.legal import (
+    BillTimelineOut,
     CaseDetailOut,
     FeedItemOut,
     LegalAnswerOut,
@@ -21,6 +22,7 @@ from app.schemas.legal import (
     UserProfileOut,
 )
 from app.services.ai import answer_legal_question
+from app.services.bill_detail import get_bill_detail
 from app.services.catalog import CASE_DETAILS, RIGHTS_TOPICS, get_personalized_feed, search_documents
 from app.services.congress import fetch_recent_federal_bills
 from app.services.legiscan import fetch_recent_state_bills
@@ -108,6 +110,14 @@ async def personalized_feed(state: str = "CA", tags: str = "Tenant") -> dict[str
         "tags": selected_tags,
         "items": items,
     }
+
+
+@router.get("/bills/{feed_item_id}/timeline", response_model=BillTimelineOut)
+async def bill_timeline(feed_item_id: str, title: str, jurisdiction: str) -> BillTimelineOut:
+    detail = await get_bill_detail(feed_item_id, title, jurisdiction)
+    if detail is None:
+        raise HTTPException(status_code=404, detail="No timeline available for this bill yet")
+    return BillTimelineOut(**detail)
 
 
 @router.post("/qa", response_model=LegalAnswerOut)

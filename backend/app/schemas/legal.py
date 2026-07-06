@@ -73,6 +73,20 @@ class LegalAnswerOut(BaseModel):
     matched_source: MatchedSourceOut | None = None
 
 
+class BillStageOut(BaseModel):
+    date: str
+    label: str
+
+
+class BillTimelineOut(BaseModel):
+    id: str
+    title: str
+    jurisdiction: str
+    source: str
+    url: str
+    stages: list[BillStageOut]
+
+
 class CaseDetailOut(BaseModel):
     name: str
     court: str

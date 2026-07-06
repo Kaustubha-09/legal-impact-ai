@@ -40,8 +40,12 @@ def _to_feed_item(bill: dict[str, Any], state_name: str, state_code: str) -> dic
     if not tags:
         return None
     number = bill.get("number", "")
+    bill_id = bill.get("bill_id", "")
     return {
-        "id": f"legiscan-{state_code}-{number}",
+        # bill_id (LegiScan's internal ID), not the human-readable bill
+        # number, is required to look up per-bill detail via getBill — see
+        # bill_detail.py.
+        "id": f"legiscan-{state_code}-{bill_id}",
         "title": title,
         "summary": description or bill.get("last_action") or "No summary available.",
         "jurisdiction": state_name,
