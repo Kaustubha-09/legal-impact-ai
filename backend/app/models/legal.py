@@ -75,3 +75,29 @@ class Watchlist(Base):
     query: Mapped[str] = mapped_column(Text)
     filters: Mapped[dict] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class DiscussionThread(Base):
+    __tablename__ = "discussion_threads"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
+    feed_item_id: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(512))
+    jurisdiction: Mapped[str] = mapped_column(String(128))
+    summary: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    posts = relationship("DiscussionPost", back_populates="thread", order_by="DiscussionPost.created_at")
+
+
+class DiscussionPost(Base):
+    __tablename__ = "discussion_posts"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
+    thread_id: Mapped[str] = mapped_column(ForeignKey("discussion_threads.id"), index=True)
+    device_id: Mapped[str] = mapped_column(String(128))
+    author_tag: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    thread = relationship("DiscussionThread", back_populates="posts")

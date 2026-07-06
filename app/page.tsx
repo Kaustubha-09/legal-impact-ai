@@ -357,6 +357,8 @@ export default function Home() {
           feedSort={feedSort}
           setFeedSort={setFeedSort}
           filteredFeed={filteredFeed}
+          deviceId={deviceId}
+          authorTag={profile.tags[0] ?? null}
         />
 
         <aside className="space-y-6">

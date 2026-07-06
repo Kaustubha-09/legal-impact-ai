@@ -86,3 +86,33 @@ class LegalSearchIn(BaseModel):
     date_from: str | None = None
     date_to: str | None = None
     rights_category: str | None = None
+
+
+class ThreadIn(BaseModel):
+    feed_item_id: str = Field(min_length=1, max_length=128)
+    title: str = Field(min_length=1, max_length=512)
+    jurisdiction: str = Field(min_length=1, max_length=128)
+    summary: str = Field(min_length=1)
+
+
+class PostOut(BaseModel):
+    id: str
+    device_id: str
+    author_tag: str | None
+    body: str
+    created_at: str
+
+
+class ThreadOut(BaseModel):
+    id: str
+    feed_item_id: str
+    title: str
+    jurisdiction: str
+    summary: str
+    posts: list[PostOut]
+
+
+class PostIn(BaseModel):
+    device_id: str = Field(min_length=1, max_length=128)
+    tag: str | None = Field(default=None, max_length=64)
+    body: str = Field(min_length=1, max_length=2000)

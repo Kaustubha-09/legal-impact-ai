@@ -2,7 +2,13 @@ import type { LegalAnswer } from "@/lib/data";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-export class ApiError extends Error {}
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}/api${path}`, {
@@ -10,7 +16,14 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (!response.ok) {
-    throw new ApiError(`Request to ${path} failed with status ${response.status}`);
+    let detail = "";
+    try {
+      const body = (await response.json()) as { detail?: string };
+      detail = body.detail ?? "";
+    } catch {
+      // response body wasn't JSON, ignore
+    }
+    throw new ApiError(detail || `Request to ${path} failed with status ${response.status}`, response.status);
   }
   return response.json() as Promise<T>;
 }
@@ -96,7 +109,7 @@ export async function saveDeviceProfile(profile: DeviceProfile): Promise<void> {
 export async function fetchDeviceProfile(deviceId: string): Promise<DeviceProfile | null> {
   const response = await fetch(`${API_BASE_URL}/api/profiles/${deviceId}`);
   if (response.status === 404) return null;
-  if (!response.ok) throw new ApiError(`Request to /profiles/${deviceId} failed with status ${response.status}`);
+  if (!response.ok) throw new ApiError(`Request to /profiles/${deviceId} failed with status ${response.status}`, response.status);
   const data = (await response.json()) as { device_id: string; state: string; city: string; county: string; tags: string[]; email: string | null };
   return { deviceId: data.device_id, state: data.state, city: data.city, county: data.county, tags: data.tags, email: data.email };
 }
@@ -195,4 +208,68 @@ function mapRightsTopic(topic: RightsTopicApi): RightsTopic {
 export async function fetchRightsTopics(): Promise<RightsTopic[]> {
   const data = await apiFetch<{ topics: RightsTopicApi[] }>("/rights");
   return data.topics.map(mapRightsTopic);
+}
+
+export type ThreadPost = {
+  id: string;
+  deviceId: string;
+  authorTag: string | null;
+  body: string;
+  createdAt: string;
+};
+
+export type Thread = {
+  id: string;
+  feedItemId: string;
+  title: string;
+  jurisdiction: string;
+  summary: string;
+  posts: ThreadPost[];
+};
+
+type ThreadApi = {
+  id: string;
+  feed_item_id: string;
+  title: string;
+  jurisdiction: string;
+  summary: string;
+  posts: Array<{ id: string; device_id: string; author_tag: string | null; body: string; created_at: string }>;
+};
+
+function mapThread(thread: ThreadApi): Thread {
+  return {
+    id: thread.id,
+    feedItemId: thread.feed_item_id,
+    title: thread.title,
+    jurisdiction: thread.jurisdiction,
+    summary: thread.summary,
+    posts: thread.posts.map((post) => ({
+      id: post.id,
+      deviceId: post.device_id,
+      authorTag: post.author_tag,
+      body: post.body,
+      createdAt: post.created_at,
+    })),
+  };
+}
+
+export async function getOrCreateThread(
+  feedItemId: string,
+  title: string,
+  jurisdiction: string,
+  summary: string,
+): Promise<Thread> {
+  const data = await apiFetch<ThreadApi>("/threads", {
+    method: "POST",
+    body: JSON.stringify({ feed_item_id: feedItemId, title, jurisdiction, summary }),
+  });
+  return mapThread(data);
+}
+
+export async function postToThread(threadId: string, deviceId: string, tag: string | null, body: string): Promise<Thread> {
+  const data = await apiFetch<ThreadApi>(`/threads/${threadId}/posts`, {
+    method: "POST",
+    body: JSON.stringify({ device_id: deviceId, tag, body }),
+  });
+  return mapThread(data);
 }

@@ -1,16 +1,22 @@
+from datetime import datetime, timedelta
+
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.models.legal import UserProfile
+from app.models.legal import DiscussionPost, DiscussionThread, UserProfile
 from app.schemas.legal import (
     CaseDetailOut,
     FeedItemOut,
     LegalAnswerOut,
     LegalQuestionIn,
     LegalSearchIn,
+    PostIn,
+    PostOut,
     RightsTopicOut,
+    ThreadIn,
+    ThreadOut,
     UserProfileIn,
     UserProfileOut,
 )
@@ -141,3 +147,69 @@ def source_connectors() -> dict[str, str]:
 @router.get("/cases")
 def case_library() -> dict[str, list[CaseDetailOut]]:
     return {"cases": [CaseDetailOut(**case) for case in CASE_DETAILS]}
+
+
+def _to_thread_out(thread: DiscussionThread) -> ThreadOut:
+    return ThreadOut(
+        id=thread.id,
+        feed_item_id=thread.feed_item_id,
+        title=thread.title,
+        jurisdiction=thread.jurisdiction,
+        summary=thread.summary,
+        posts=[
+            PostOut(
+                id=post.id,
+                device_id=post.device_id,
+                author_tag=post.author_tag,
+                body=post.body,
+                created_at=post.created_at.isoformat(),
+            )
+            for post in thread.posts
+        ],
+    )
+
+
+@router.post("/threads", response_model=ThreadOut)
+def get_or_create_thread(payload: ThreadIn, db: Session = Depends(get_db)) -> ThreadOut:
+    thread = db.query(DiscussionThread).filter(DiscussionThread.feed_item_id == payload.feed_item_id).first()
+    if thread is None:
+        thread = DiscussionThread(
+            feed_item_id=payload.feed_item_id,
+            title=payload.title,
+            jurisdiction=payload.jurisdiction,
+            summary=payload.summary,
+        )
+        db.add(thread)
+        db.commit()
+        db.refresh(thread)
+    return _to_thread_out(thread)
+
+
+POST_RATE_LIMIT = timedelta(seconds=10)
+
+
+@router.post("/threads/{thread_id}/posts", response_model=ThreadOut)
+def create_post(thread_id: str, payload: PostIn, db: Session = Depends(get_db)) -> ThreadOut:
+    thread = db.query(DiscussionThread).filter(DiscussionThread.id == thread_id).first()
+    if thread is None:
+        raise HTTPException(status_code=404, detail="Thread not found")
+
+    last_post = (
+        db.query(DiscussionPost)
+        .filter(DiscussionPost.device_id == payload.device_id)
+        .order_by(DiscussionPost.created_at.desc())
+        .first()
+    )
+    if last_post is not None and datetime.utcnow() - last_post.created_at < POST_RATE_LIMIT:
+        raise HTTPException(status_code=429, detail="You're posting too fast. Please wait a few seconds.")
+
+    post = DiscussionPost(
+        thread_id=thread.id,
+        device_id=payload.device_id,
+        author_tag=payload.tag,
+        body=payload.body,
+    )
+    db.add(post)
+    db.commit()
+    db.refresh(thread)
+    return _to_thread_out(thread)
